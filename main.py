@@ -12,12 +12,15 @@ FPS = 60 # Frames per second
 # Color values
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+PADDLE_WIDTH, PADDLE_HEIGHT = 20, 100
 
 # Classes
 
 # Paddle class
 class Paddle:
+    # Class attributes apply to all instances of the class
     COLOR = WHITE
+    VEL = 4
 
     def __init__(self, x, y, width, height):
         self.x = x
@@ -28,25 +31,67 @@ class Paddle:
     def draw(self, win):
         pygame.draw.rect(win, self.COLOR, (self.x, self.y , self.width, self.height))
 
+    # Move the paddle up and down
+    def move(self, up=True):
+        if up:
+            self.y -= self.VEL
+        else:
+            self.y += self.VEL
+
 # Draw function
-def draw(win): # win stands for (game window)
+def draw(win, paddles): # win stands for (game window)
     win.fill(BLACK) # Window color
+
+    # Draw both paddles
+    for paddle in paddles:
+        paddle.draw(win)
+
+    # Draw line down the center of the window
+    for i in range(10, HEIGHT, HEIGHT // 20):
+        if i % 2 == 1:
+            continue
+        pygame.draw.rect(win, WHITE, (WIDTH // 2 - 5, i, 10, HEIGHT // 20))
+
     pygame.display.update() # Update the game window (This should only be done after all the drawing is done)
+
+def handle_paddle_movement(keys, left_paddle, right_paddle):
+    # Left Paddle
+    if keys[pygame.K_w] and left_paddle.y - left_paddle.VEL >= 0:
+        left_paddle.move(up=True)
+    if keys[pygame.K_s] and left_paddle.y + left_paddle.VEL + left_paddle.height <= HEIGHT:
+        left_paddle.move(up=False)
+
+    # Right Paddle
+    if keys[pygame.K_UP] and right_paddle.y - right_paddle.VEL >= 0:
+        right_paddle.move(up=True)
+    if keys[pygame.K_DOWN] and right_paddle.y + right_paddle.VEL + right_paddle.height <= HEIGHT:
+        right_paddle.move(up=False)
+
 
 # Event function that displays the game window and draws something on it
 def main():
     run = True
     clock = pygame.time.Clock() # Regulate the frame rate of our game
 
+    # Paddle instances
+    left_paddle = Paddle(10, HEIGHT // 2 - PADDLE_HEIGHT / 2, PADDLE_WIDTH, PADDLE_HEIGHT)
+    right_paddle = Paddle(WIDTH - 10 - PADDLE_WIDTH, HEIGHT // 2 - PADDLE_HEIGHT // 2, PADDLE_WIDTH, PADDLE_HEIGHT)
+
+
     # Main event loop
     while run:
         clock.tick(FPS)
-        draw(WIN) # Window that we want to draw on
+        draw(WIN, [left_paddle, right_paddle]) # Window that we want to draw on
 
         for event in pygame.event.get():
             if event .type == pygame.QUIT:
                 run = False
                 break
+
+
+        keys = pygame.key.get_pressed()
+        handle_paddle_movement(keys, left_paddle, right_paddle)
+
     pygame.quit()
 
 # Ensure that we are running this module to call the main function
