@@ -14,6 +14,8 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 PADDLE_WIDTH, PADDLE_HEIGHT = 20, 100
 BALL_RADIUS = 7
+SCORE_FONT = pygame.font.SysFont("comicsans", 50)
+WINNING_SCORE = 10
 
 # Classes
 
@@ -46,8 +48,8 @@ class Ball:
     COLOR = WHITE
 
     def __init__(self, x, y, radius):
-        self.x = x
-        self.y = y
+        self.x = self.original_x = x
+        self.y = self.original_y = y
         self.radius = radius
         self.x_vel = self.MAX_VEL
         self.y_vel = 0
@@ -60,9 +62,22 @@ class Ball:
         self.x += self.x_vel
         self.y += self.y_vel
 
+    # Resetting the ball
+    def reset(self):
+        self.x = self.original_x
+        self.y = self.original_y
+        self.y_vel = 0
+        self.x_vel *= -1
+
 # Draw function
-def draw(win, paddles, ball): # win stands for (game window)
+def draw(win, paddles, ball, left_score, right_score): # win stands for (game window)
     win.fill(BLACK) # Window color
+
+    # Drawing the scores
+    left_score_text = SCORE_FONT.render(f'{left_score}', 1, WHITE)
+    right_score_text = SCORE_FONT.render(f'{right_score}', 1, WHITE)
+    win.blit(left_score_text, (WIDTH // 4 - left_score_text.get_width() // 2, 20))
+    win.blit(right_score_text, (WIDTH *  (3/ 4) - right_score_text.get_width() // 2, 20))
 
     # Draw both paddles
     for paddle in paddles:
@@ -115,7 +130,6 @@ def handle_collision(ball, left_paddle, right_paddle):
                 ball.y_vel = -1 * y_vel
 
 
-
 # Paddle Movement
 def handle_paddle_movement(keys, left_paddle, right_paddle):
     # Left Paddle
@@ -135,6 +149,8 @@ def handle_paddle_movement(keys, left_paddle, right_paddle):
 def main():
     run = True
     clock = pygame.time.Clock() # Regulate the frame rate of our game
+    left_score = 0
+    right_score = 0
 
     # Paddle instances
     left_paddle = Paddle(10, HEIGHT // 2 - PADDLE_HEIGHT / 2, PADDLE_WIDTH, PADDLE_HEIGHT)
@@ -147,7 +163,7 @@ def main():
     # Main event loop
     while run:
         clock.tick(FPS)
-        draw(WIN, [left_paddle, right_paddle], ball) # Window that we want to draw on
+        draw(WIN, [left_paddle, right_paddle], ball, left_score, right_score) # Window that we want to draw on
 
         for event in pygame.event.get():
             if event .type == pygame.QUIT:
@@ -160,6 +176,16 @@ def main():
 
         ball.move()
         handle_collision(ball, left_paddle, right_paddle)
+
+        # Score
+        if ball.x < 0:
+            right_score += 1
+            ball.reset()
+        elif ball.x > WIDTH:
+            left_score += 1
+            ball.reset()
+
+        
 
     pygame.quit()
 
